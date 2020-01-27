@@ -1,5 +1,6 @@
 package socs.network.node;
 
+import com.sun.xml.internal.bind.v2.TODO;
 import socs.network.util.Configuration;
 
 import java.io.BufferedReader;
@@ -48,14 +49,18 @@ public class Router {
    * <p/>
    * NOTE: this command should not trigger link database synchronization
    */
+  // TODO: Attach
   private void processAttach(String processIP, short processPort,
                              String simulatedIP, short weight) {
+      RouterDescription description = new RouterDescription(processIP, processPort, simulatedIP);
+
 
   }
 
   /**
    * broadcast Hello to neighbors
    */
+  // TODO: Start
   private void processStart() {
 
   }
@@ -75,6 +80,7 @@ public class Router {
   /**
    * output the neighbors of the routers
    */
+  // TODO: Neighbors
   private void processNeighbors() {
 
   }
