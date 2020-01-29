@@ -17,5 +17,8 @@ public class RouterDescription {
       this.simulatedIPAddress = simulatedIPAddress;
   }
 
+  RouterDescription(){
+  }
+
 
 }

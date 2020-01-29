@@ -1,10 +1,12 @@
 package socs.network.node;
 
 import com.sun.xml.internal.bind.v2.TODO;
+import socs.network.message.SOSPFPacket;
 import socs.network.util.Configuration;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.Socket;
 
 
 public class Router {
@@ -18,6 +20,8 @@ public class Router {
 
   public Router(Configuration config) {
     rd.simulatedIPAddress = config.getString("socs.network.router.ip");
+    rd.processPortNumber = config.getShort("socs.network.router.port");
+
     lsd = new LinkStateDatabase(rd);
   }
 
@@ -52,9 +56,35 @@ public class Router {
   // TODO: Attach
   private void processAttach(String processIP, short processPort,
                              String simulatedIP, short weight) {
-      RouterDescription description = new RouterDescription(processIP, processPort, simulatedIP);
+
+    RouterDescription remote = new RouterDescription(processIP, processPort, simulatedIP);
 
 
+    // Identify the router with simulated ip in the simulated network space only
+    if(simulatedIP.equals(this.rd.simulatedIPAddress)){
+      System.out.println("Router can't attach to itself");
+      System.exit(1);
+    }
+
+    // Check if the link is already established.
+    for(Link port : this.ports){
+      if(port != null){
+        if(port.router2.simulatedIPAddress.equals(simulatedIP)){
+          System.out.println("Link already established");
+          return;
+        }
+      }
+    }
+
+    // Create the attachment
+    for(int i = 0; i < 4; i++){
+      if(this.ports[i] == null){
+        this.ports[i] = new Link(this.rd, remote);
+        return;
+      }
+    }
+
+    System.out.println("Attach failed :Ports are all taken");
   }
 
   /**
@@ -62,6 +92,26 @@ public class Router {
    */
   // TODO: Start
   private void processStart() {
+
+      System.out.println("START");
+      if(ports.length == 0){
+        System.out.println("No routers connected");
+        return;
+      }
+
+      Socket client = null;
+
+      // Try to create a socket for every connected router
+      for(Link link : ports){
+        try {
+          client = new Socket(link.router2.processIPAddress, link.router2.processPortNumber);
+        }
+        catch (Exception e){
+          System.out.println("oh noo");
+        }
+      }
+
+      SOSPFPacket packet = new SOSPFPacket();
 
   }
 
