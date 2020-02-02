@@ -105,44 +105,40 @@ public class Router {
             return;
         }
 
-        for (int i = 0; i < 4; i++) {
-            if (null == ports[i])
+        int i = -1;
+        for (Link port : ports) {
+            i++;
+            if (null == port)
                 continue;
             // if already neighbors, no need to send hello again
-            if (ports[i].router2.status == RouterStatus.TWO_WAY)
+            if (port.router2.status == RouterStatus.TWO_WAY)
                 continue;
             // create a hello packet
-            SOSPFPacket packet = new SOSPFPacket(ports[i].router1.processIPAddress, ports[i].router1.processPortNumber,
-                    ports[i].router1.simulatedIPAddress, ports[i].router2.simulatedIPAddress, (short) 0,
+            SOSPFPacket greetingPacket = new SOSPFPacket(port.router1.processIPAddress, port.router1.processPortNumber,
+                    port.router1.simulatedIPAddress, port.router2.simulatedIPAddress, (short) 0,
                     "", "", null);
             try {
                 // create a client socket
-                clientSocket[i] = new Socket(ports[i].router2.processIPAddress, ports[i].router2.processPortNumber);
-                ObjectOutputStream out = new ObjectOutputStream(clientSocket[i].getOutputStream());
+                clientSocket[i] = new Socket(port.router2.processIPAddress, port.router2.processPortNumber);
+                ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket[i].getOutputStream());
                 // send first hello packet
-                out.writeObject(packet);
-                ObjectInputStream in = new ObjectInputStream(clientSocket[i].getInputStream());
+                outputStream.writeObject(greetingPacket);
+                ObjectInputStream inputStream = new ObjectInputStream(clientSocket[i].getInputStream());
                 // blocking operation
-                SOSPFPacket received = (SOSPFPacket) in.readObject();
-                if (received.sospfType == 0) {
-                    System.out.println("received HELLO from " + received.srcIP + ";");
-                    ports[i].router2.status = RouterStatus.TWO_WAY;
-                    System.out.println("set " + received.srcIP + " state to TWO_WAY;");
+                SOSPFPacket receivedPacket = (SOSPFPacket) inputStream.readObject();
+                if (receivedPacket.sospfType == 0) {
+                    System.out.println("received HELLO from " + receivedPacket.srcIP + ";");
+                    port.router2.status = RouterStatus.TWO_WAY;
+                    System.out.println("set " + receivedPacket.srcIP + " state to TWO_WAY;");
                 } else {
                     System.err.println("Error in received packet!");
                 }
                 // send second hello packet
-                out.writeObject(packet);
-                in.close();
-                out.close();
+                outputStream.writeObject(greetingPacket);
+                inputStream.close();
+                outputStream.close();
             } catch (Exception e) {
-                System.out.println(e.getMessage());
-                if (e instanceof IOException)
-                    System.err.println("Port cannot be used");
-                else if (e instanceof ClassNotFoundException)
-                    System.err.println("In stream object class not found");
-                else
-                    System.err.println(e.getMessage());
+                System.err.println(e.getMessage());
             }
         }
 
