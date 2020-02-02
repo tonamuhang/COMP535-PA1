@@ -9,9 +9,7 @@ import java.net.Socket;
 
 public class Router {
 
-    protected LinkStateDatabase lsd;
-
-    RouterDescription rd = new RouterDescription();
+   RouterDescription rd = new RouterDescription();
 
     //assuming that all routers are with 4 ports
     Link[] ports = new Link[4];
@@ -20,13 +18,17 @@ public class Router {
 
     public Router(Configuration config) {
         rd.simulatedIPAddress = config.getString("socs.network.router.ip");
-        rd.processPortNumber = config.getShort("socs.network.router.port");
+       String port = config.getString("socs.network.router.port");
+       short p = Short.valueOf(port);
+        rd.processPortNumber = p;
         rd.processIPAddress = "localhost";
 
+
+        System.out.println(p);
         server = new Server(this);
         new Thread(server).start();
 
-        lsd = new LinkStateDatabase(rd);
+//        lsd = new LinkStateDatabase(rd);
     }
 
     /**
@@ -134,6 +136,7 @@ public class Router {
                 in.close();
                 out.close();
             } catch (Exception e) {
+                System.out.println(e.getMessage());
                 if (e instanceof IOException)
                     System.err.println("Port cannot be used");
                 else if (e instanceof ClassNotFoundException)

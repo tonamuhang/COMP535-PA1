@@ -6,6 +6,7 @@ import socs.network.message.SOSPFPacket;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Iterator;
@@ -24,7 +25,9 @@ public class Server implements Runnable{
     public Server(Router router){
         this.router = router;
         try {
-            this.serverSocket = new ServerSocket(router.rd.processPortNumber);
+//            this.serverSocket = new ServerSocket(router.rd.processPortNumber);
+            this.serverSocket = new ServerSocket();
+            serverSocket.bind(new InetSocketAddress(router.rd.processIPAddress, router.rd.processPortNumber));
         } catch (IOException e) {
             System.out.println("Port cannot be used");
         }
@@ -33,7 +36,7 @@ public class Server implements Runnable{
     public void run() {
         while (on) {
             try {
-                System.out.println("A");
+//                System.out.println("A");
                 Socket clientSocket = serverSocket.accept();
                 ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
                 ObjectOutputStream out= new ObjectOutputStream(clientSocket.getOutputStream());
