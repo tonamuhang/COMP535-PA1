@@ -132,7 +132,13 @@ public class Router {
    */
   // TODO: Neighbors
   private void processNeighbors() {
-
+    int i = 1;
+    for(Link link : ports){
+      if(link.router2.status == RouterStatus.TWO_WAY){
+        System.out.println("IP Address of the neighbor" + i + link.router2.simulatedIPAddress);
+        i++;
+      }
+    }
   }
 
   /**
