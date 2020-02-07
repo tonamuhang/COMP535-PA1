@@ -1,28 +1,35 @@
 package socs.network.node;
 
-import com.sun.xml.internal.bind.v2.TODO;
 import socs.network.message.SOSPFPacket;
 import socs.network.util.Configuration;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 
 
 public class Router {
-
-  protected LinkStateDatabase lsd;
 
   RouterDescription rd = new RouterDescription();
 
   //assuming that all routers are with 4 ports
   Link[] ports = new Link[4];
+  Socket[] clientSocket = new Socket[4];
+  private Server server;
 
   public Router(Configuration config) {
     rd.simulatedIPAddress = config.getString("socs.network.router.ip");
-    rd.processPortNumber = config.getShort("socs.network.router.port");
+    String port = config.getString("socs.network.router.port");
+    short p = Short.valueOf(port);
+    rd.processPortNumber = p;
+    rd.processIPAddress = "localhost";
 
-    lsd = new LinkStateDatabase(rd);
+    System.out.println(p);
+    server = new Server(this);
+    new Thread(server).start();
+
+
+//        lsd = new LinkStateDatabase(rd);
   }
 
   /**
@@ -63,7 +70,7 @@ public class Router {
     // Identify the router with simulated ip in the simulated network space only
     if(simulatedIP.equals(this.rd.simulatedIPAddress)){
       System.out.println("Router can't attach to itself");
-      System.exit(1);
+      return;
     }
 
     // Check if the link is already established.
@@ -77,14 +84,12 @@ public class Router {
     }
 
     // Create the attachment
-    for(int i = 0; i < 4; i++){
-      if(this.ports[i] == null){
-        this.ports[i] = new Link(this.rd, remote);
-        return;
-      }
+    Link link = new Link(this.rd, remote);
+
+    if(this.addLink(link) == 0) {
+      System.out.println("Attached to router " + link.router2.simulatedIPAddress);
     }
 
-    System.out.println("Attach failed :Ports are all taken");
   }
 
   /**
@@ -93,25 +98,53 @@ public class Router {
   // TODO: Start
   private void processStart() {
 
-      System.out.println("START");
-      if(ports.length == 0){
-        System.out.println("No routers connected");
-        return;
-      }
 
-      Socket client = null;
+    System.out.println("START");
+    if (ports.length == 0) {
+      System.out.println("No routers connected");
+      return;
+    }
 
-      // Try to create a socket for every connected router
-      for(Link link : ports){
-        try {
-          client = new Socket(link.router2.processIPAddress, link.router2.processPortNumber);
+    for(int i = 0; i < this.ports.length; i++){
+      Link link = this.ports[i];
+      if(link != null && link.router2.status != RouterStatus.TWO_WAY){
+        SOSPFPacket packet = new SOSPFPacket(link.router1.processIPAddress, link.router1.processPortNumber,
+                link.router1.simulatedIPAddress, link.router2.simulatedIPAddress, (short) 0,
+                "", "", null);
+
+        try{
+          Socket client = new Socket(link.router2.processIPAddress, link.router2.processPortNumber);
+          clientSocket[i] = client;
+          ObjectOutputStream output = new ObjectOutputStream(client.getOutputStream());
+          ObjectInputStream input = new ObjectInputStream(client.getInputStream());
+
+          // Send hello packet to the attached router
+          output.writeObject(packet);
+
+          // Blocked until the router receive a packet back from the connected router
+          SOSPFPacket received = (SOSPFPacket)input.readObject();
+
+          // Check if the received packet is a hello packet
+          if(received.sospfType == 0){
+            System.out.println("received HELLO from " + received.srcIP + ";");
+            link.router2.status = RouterStatus.TWO_WAY;
+            System.out.println("set " + received.srcIP + " state to TWO_WAY;");
+
+            // Acknowledge the packet is received
+            output.writeObject(packet);
+
+          }
+
+          input.close();
+          output.close();
+
         }
         catch (Exception e){
-          System.out.println("oh noo");
+          System.out.println(e);
         }
       }
+    }
 
-      SOSPFPacket packet = new SOSPFPacket();
 
   }
 
@@ -134,8 +167,8 @@ public class Router {
   private void processNeighbors() {
     int i = 1;
     for(Link link : ports){
-      if(link.router2.status == RouterStatus.TWO_WAY){
-        System.out.println("IP Address of the neighbor" + i + link.router2.simulatedIPAddress);
+      if(link != null && link.router2.status == RouterStatus.TWO_WAY){
+        System.out.println("IP Address of the neighbor " + i + "\n" + link.router2.simulatedIPAddress);
         i++;
       }
     }
@@ -188,6 +221,45 @@ public class Router {
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  /**
+   * Add a link to this Router's port list
+   * @param link
+   */
+  public synchronized int addLink(Link link){
+
+    if(link != null && !linkExist(link)){
+      for(int i = 0; i < this.ports.length; i++){
+        if(this.ports[i] == null){
+          ports[i] = link;
+          return 0;
+        }
+        else if(i == 3){
+          System.out.println("Attach failed :Ports are all taken");
+        }
+      }
+
+
+
+
+    }
+    return -1;
+  }
+
+  /**
+   * CHeck if a given link exists in the list of ports
+   * @param link
+   * @return True if exists, false if not
+   */
+  public synchronized boolean linkExist(Link link){
+    for(Link l : this.ports){
+      if(l != null && l.equals(link)){
+        return true;
+      }
+    }
+
+    return false;
   }
 
 }

@@ -40,6 +40,7 @@ public class Server implements Runnable {
                 this.inputStream = new ObjectInputStream(client.getInputStream());
                 this.outputStream = new ObjectOutputStream(client.getOutputStream());
 
+                // Blocked until received packet from the other router
                 this.received = (SOSPFPacket)this.inputStream.readObject();
                 if(this.received.sospfType == 0){
                     setInit();
@@ -103,12 +104,12 @@ public class Server implements Runnable {
             for(Link link : this.router.ports){
                 if(link != null && link.router2.simulatedIPAddress.equals(this.received.srcIP)){
                     link.router2.status = RouterStatus.TWO_WAY;
-                    System.out.println("set " + this.received.dstIP + " state to TWO_WAY;");
+                    System.out.println("set " + this.received.srcIP + " state to TWO_WAY;");
                     return;
                 }
             }
 
-            System.out.println("Set " + this.received.dstIP + " to TWO_WAY failed");
+            System.out.println("Set " + this.received.srcIP + " to TWO_WAY failed");
 
 
         }

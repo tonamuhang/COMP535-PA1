@@ -11,6 +11,6 @@ public class Link {
   }
 
   public boolean equals(Link link) {
-    return router2.simulatedIPAddress.equals(link.router1.simulatedIPAddress);
+    return router2.simulatedIPAddress.equals(link.router2.simulatedIPAddress);
   }
 }
