@@ -9,4 +9,8 @@ public class Link {
     router1 = r1;
     router2 = r2;
   }
+
+  public boolean equals(Link link) {
+    return router2.simulatedIPAddress.equals(link.router1.simulatedIPAddress);
+  }
 }
