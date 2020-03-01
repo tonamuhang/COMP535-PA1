@@ -16,6 +16,7 @@ public class Router {
   Link[] ports = new Link[4];
   Socket[] clientSocket = new Socket[4];
   private Server server;
+  LinkStateDatabase lsd ;
 
   public Router(Configuration config) {
     rd.simulatedIPAddress = config.getString("socs.network.router.ip");
@@ -29,7 +30,7 @@ public class Router {
     new Thread(server).start();
 
 
-//        lsd = new LinkStateDatabase(rd);
+    lsd = new LinkStateDatabase(rd);
   }
 
   /**
@@ -40,7 +41,11 @@ public class Router {
    * @param destinationIP the ip adderss of the destination simulated router
    */
   private void processDetect(String destinationIP) {
-
+    if (destinationIP.equals(rd.simulatedIPAddress)) {
+      System.out.println("Cannot detect to yourself!");
+    }else{
+      System.out.println(lsd.getShortestPath(destinationIP));
+    }
   }
 
   /**
