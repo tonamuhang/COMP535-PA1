@@ -44,7 +44,7 @@ public class Router {
     if (destinationIP.equals(rd.simulatedIPAddress)) {
       System.out.println("Cannot detect to yourself!");
     }else{
-      System.out.println(lsd.getShortestPath(destinationIP));
+      lsd.getShortestPath(destinationIP);
     }
   }
 
