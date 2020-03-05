@@ -195,7 +195,7 @@ public class Router {
    * disconnect with all neighbors and quit the program
    */
   private void processQuit() {
-
+    System.out.println(lsd.toString());
   }
 
 
@@ -263,6 +263,7 @@ public class Router {
     for(Map.Entry<String, LSA> s : this.lsd._store.entrySet()){
       lsaVector.add(s.getValue());
     }
+
 
     broadcastLSP(lsaVector);
 

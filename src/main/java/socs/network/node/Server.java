@@ -58,20 +58,15 @@ public class Server implements Runnable {
                     Vector<LSA> lsaVector = this.received.lsaArray;
 
 
-                    for(LSA lsa : lsaVector){
-                        if(this.router.lsd._store.containsKey(lsa.linkStateID)){
-                            if(lsa.lsaSeqNumber > router.lsd._store.get(lsa.linkStateID).lsaSeqNumber){
-                                this.router.lsd._store.put(lsa.linkStateID, lsa);
-                                this.router.forwardPacket(this.received);
 
-                            }
-                            else{
-                                this.router.lsd._store.put(lsa.linkStateID, lsa);
-                                this.router.forwardPacket(this.received);
-                            }
-                        }
+                    for(LSA lsa : lsaVector){
+                        this.router.lsd._store.put(lsa.linkStateID, lsa);
+                        this.router.forwardPacket(this.received);
                     }
                 }
+
+                inputStream.close();
+                outputStream.close();
             }
             catch (Exception e){
                 System.out.println(e);
