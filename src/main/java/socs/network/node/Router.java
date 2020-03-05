@@ -226,9 +226,10 @@ public class Router {
 
       out.writeObject(packet);
       out.close();
+      client.close();
     }
     catch (Exception e){
-      e.printStackTrace();
+
     }
   }
 
