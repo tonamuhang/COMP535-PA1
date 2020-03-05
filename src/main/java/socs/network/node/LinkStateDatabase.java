@@ -48,11 +48,8 @@ public class LinkStateDatabase {
         while (unsettled.size() > 0) {
             String node = getNearestNeighbor(unsettled);
             settled.add(node);
-            unsettled.remove(node);
-            if (node.equals(destinationIP)){
-              break;
-            }
             findOtherNeighbors(node);
+            unsettled.remove(node);
         }
 
         String predecessor = destinationAndPredecessor.get(destinationIP);
@@ -79,9 +76,10 @@ public class LinkStateDatabase {
             }
         }
         for (String s : neighbors) {
-            if (nodeAndDistance.get(s) != null && nodeAndDistance.get(nodeIp) != null &&
-                    nodeAndDistance.get(s) > nodeAndDistance.get(nodeIp) + wg.edges[wg.find(nodeIp)][wg.find(s)]) {
-                nodeAndDistance.put(s, nodeAndDistance.get(nodeIp) + wg.edges[wg.find(nodeIp)][wg.find(s)]);
+            Integer originalDistance = nodeAndDistance.get(s) != null ? nodeAndDistance.get(s) : Integer.MAX_VALUE;
+            Integer nodeDistance = nodeAndDistance.get(nodeIp) != null ? nodeAndDistance.get(nodeIp) : Integer.MAX_VALUE;
+            if (originalDistance > nodeDistance + wg.edges[wg.find(nodeIp)][wg.find(s)]) {
+                nodeAndDistance.put(s, nodeDistance + wg.edges[wg.find(nodeIp)][wg.find(s)]);
                 destinationAndPredecessor.put(s, nodeIp);
                 unsettled.add(s);
             }
