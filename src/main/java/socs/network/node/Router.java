@@ -1,12 +1,14 @@
 package socs.network.node;
 
+import socs.network.message.LSA;
+import socs.network.message.LinkDescription;
 import socs.network.message.SOSPFPacket;
 import socs.network.util.Configuration;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-
+import java.util.*;
+import java.util.Map;
 
 public class Router {
 
@@ -25,12 +27,16 @@ public class Router {
     rd.processPortNumber = p;
     rd.processIPAddress = "localhost";
 
+    lsd = new LinkStateDatabase(rd);
+
     System.out.println(p);
     server = new Server(this);
     new Thread(server).start();
 
 
-    lsd = new LinkStateDatabase(rd);
+
+
+
   }
 
   /**
@@ -89,7 +95,7 @@ public class Router {
     }
 
     // Create the attachment
-    Link link = new Link(this.rd, remote);
+    Link link = new Link(this.rd, remote, weight);
 
     if(this.addLink(link) == 0) {
       System.out.println("Attached to router " + link.router2.simulatedIPAddress);
@@ -140,6 +146,8 @@ public class Router {
 
           }
 
+          lsaUpdate(this.ports[i].router2.simulatedIPAddress, this.ports[i].router2.processPortNumber,
+                  (short)this.ports[i].weight);
           input.close();
           output.close();
 
@@ -185,6 +193,77 @@ public class Router {
   private void processQuit() {
 
   }
+
+
+
+  public void broadcastLSP(Vector<LSA> lsaVector){
+    for(Link link : this.ports){
+      if(link == null){
+        continue;
+      }
+      if(link.router2.status == RouterStatus.TWO_WAY){
+        SOSPFPacket packet = new SOSPFPacket(link.router1.processIPAddress, link.router1.processPortNumber,
+                link.router1.simulatedIPAddress, link.router2.simulatedIPAddress, (short) 1, "", "",
+                lsaVector, link.weight);
+
+        sendPacket(link.router2, packet);
+
+      }
+
+
+    }
+  }
+
+
+  public void sendPacket(RouterDescription rd, SOSPFPacket packet){
+    try{
+      Socket client = new Socket(rd.processIPAddress, rd.processPortNumber);
+      ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
+
+      out.writeObject(packet);
+      out.close();
+    }
+    catch (Exception e){
+      e.printStackTrace();
+    }
+  }
+
+  public void forwardPacket(SOSPFPacket packet){
+    for(Link link : this.ports){
+      if(link == null){
+        continue;
+      }
+      if(link.router2.status == RouterStatus.TWO_WAY && !link.router2.simulatedIPAddress.equals(packet.srcIP)){
+        SOSPFPacket packet1 = new SOSPFPacket(link.router1.processIPAddress,
+                link.router1.processPortNumber, link.router1.simulatedIPAddress,
+                link.router2.simulatedIPAddress, (short) 1, "", "", packet.lsaArray,
+                link.weight);
+
+        sendPacket(link.router2, packet1);
+      }
+    }
+  }
+
+  public void lsaUpdate(String linkID, short portNum, short weight){
+    LinkDescription ld = new LinkDescription();
+    ld.linkID = linkID;
+    ld.portNum = portNum;
+    ld.tosMetrics = weight;
+
+    LSA lsa = lsd._store.get(this.rd.simulatedIPAddress);
+    lsa.links.add(ld);
+    lsa.lsaSeqNumber ++;
+
+    Vector<LSA> lsaVector = new Vector<LSA>();
+
+    for(Map.Entry<String, LSA> s : this.lsd._store.entrySet()){
+      lsaVector.add(s.getValue());
+    }
+
+    broadcastLSP(lsaVector);
+
+  }
+
 
   public void terminal() {
     try {

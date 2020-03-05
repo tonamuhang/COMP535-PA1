@@ -1,5 +1,6 @@
 package socs.network.node;
 
+import socs.network.message.LSA;
 import socs.network.message.SOSPFPacket;
 
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Vector;
 
 public class Server implements Runnable {
     private ServerSocket serverSocket;
@@ -44,13 +46,30 @@ public class Server implements Runnable {
                 this.received = (SOSPFPacket)this.inputStream.readObject();
                 if(this.received.sospfType == 0){
                     setInit();
-                }
+                    this.received = (SOSPFPacket)this.inputStream.readObject();
+                    if(this.received.sospfType == 0) {
+                        setTwoway();
+                    }
 
-                this.received = (SOSPFPacket)this.inputStream.readObject();
-                if(this.received.sospfType == 0) {
-                    setTwoway();
+                    this.router.lsaUpdate(this.received.srcIP,
+                            this.received.srcProcessPort, (short) this.received.weight);
                 }
+                else if(this.received.sospfType == 1){
+                    Vector<LSA> lsaVector = this.received.lsaArray;
 
+                    for(LSA lsa : lsaVector){
+                        if(this.router.lsd._store.containsKey(lsa.linkStateID)){
+                            if(lsa.lsaSeqNumber > router.lsd._store.get(lsa.linkStateID).lsaSeqNumber){
+                                this.router.lsd._store.put(lsa.linkStateID, lsa);
+                                this.router.forwardPacket(this.received);
+                            }
+                            else{
+                                this.router.lsd._store.put(lsa.linkStateID, lsa);
+                                this.router.forwardPacket(this.received);
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception e){
                 System.out.println(e);
@@ -61,9 +80,8 @@ public class Server implements Runnable {
         try {
             serverSocket.close();
             System.out.println("Server Stopped");
-        } catch (IOException ioe) {
-            System.out.println("Error Found stopping server socket");
-            System.exit(-1);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
