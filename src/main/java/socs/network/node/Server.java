@@ -52,16 +52,18 @@ public class Server implements Runnable {
                     }
 
                     this.router.lsaUpdate(this.received.srcIP,
-                            this.received.srcProcessPort, (short) this.received.weight);
+                            this.received.srcProcessPort, this.received.weight);
                 }
                 else if(this.received.sospfType == 1){
                     Vector<LSA> lsaVector = this.received.lsaArray;
+
 
                     for(LSA lsa : lsaVector){
                         if(this.router.lsd._store.containsKey(lsa.linkStateID)){
                             if(lsa.lsaSeqNumber > router.lsd._store.get(lsa.linkStateID).lsaSeqNumber){
                                 this.router.lsd._store.put(lsa.linkStateID, lsa);
                                 this.router.forwardPacket(this.received);
+
                             }
                             else{
                                 this.router.lsd._store.put(lsa.linkStateID, lsa);
@@ -93,7 +95,7 @@ public class Server implements Runnable {
             RouterDescription rd = new RouterDescription(this.received.srcProcessIP,
                     this.received.srcProcessPort, this.received.srcIP);
 
-            Link link = new Link(router.rd, rd);
+            Link link = new Link(router.rd, rd, this.received.weight);
 
             if (this.router.linkExist(link)) {
                 System.err.println("This link cannot be attached again!");
@@ -105,7 +107,7 @@ public class Server implements Runnable {
             System.out.println("set " + this.received.srcIP + " state to INIT");
             SOSPFPacket response = new SOSPFPacket(this.router.rd.processIPAddress, this.router.rd.processPortNumber,
                     this.router.rd.simulatedIPAddress, this.received.srcIP, (short) 0,
-                    "", "", null);
+                    "", "", null, this.received.weight);
 
             outputStream.writeObject(response);
         }

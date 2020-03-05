@@ -25,7 +25,7 @@ public class SOSPFPacket implements Serializable {
 
   //used by LSAUPDATE
   public Vector<LSA> lsaArray = null;
-  public int weight = 0;
+  public short weight = 0;
 
   public SOSPFPacket(String srcProcessIP, short srcProcessPort,
                      String srcIP, String dstIP, short sospfType,
@@ -42,7 +42,7 @@ public class SOSPFPacket implements Serializable {
 
   public SOSPFPacket(String srcProcessIP, short srcProcessPort,
                      String srcIP, String dstIP, short sospfType,
-                     String routerID, String neighborID, Vector<LSA> lsaArray, int weight) {
+                     String routerID, String neighborID, Vector<LSA> lsaArray, short weight) {
     this.srcProcessIP = srcProcessIP;
     this.srcProcessPort = srcProcessPort;
     this.srcIP = srcIP;

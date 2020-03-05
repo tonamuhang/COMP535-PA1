@@ -121,7 +121,7 @@ public class Router {
       if(link != null && link.router2.status != RouterStatus.TWO_WAY){
         SOSPFPacket packet = new SOSPFPacket(link.router1.processIPAddress, link.router1.processPortNumber,
                 link.router1.simulatedIPAddress, link.router2.simulatedIPAddress, (short) 0,
-                "", "", null);
+                "", "", null, link.weight);
 
         try{
           Socket client = new Socket(link.router2.processIPAddress, link.router2.processPortNumber);
@@ -141,13 +141,17 @@ public class Router {
             link.router2.status = RouterStatus.TWO_WAY;
             System.out.println("set " + received.srcIP + " state to TWO_WAY;");
 
-            // Acknowledge the packet is received
-            output.writeObject(packet);
+
 
           }
+          // Acknowledge the packet is received
+          output.writeObject(packet);
 
+          // Update lsa
           lsaUpdate(this.ports[i].router2.simulatedIPAddress, this.ports[i].router2.processPortNumber,
-                  (short)this.ports[i].weight);
+                  this.ports[i].weight);
+
+
           input.close();
           output.close();
 
