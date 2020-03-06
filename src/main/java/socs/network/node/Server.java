@@ -69,7 +69,7 @@ public class Server implements Runnable {
                 outputStream.close();
             }
             catch (Exception e){
-                System.out.println(e);
+//                System.out.println(e);
             }
         }
 
@@ -78,7 +78,8 @@ public class Server implements Runnable {
             serverSocket.close();
             System.out.println("Server Stopped");
         } catch (IOException e) {
-            e.printStackTrace();
+//            System.out.println("Uh ohhh");
+//            e.printStackTrace();
         }
     }
 
@@ -107,7 +108,7 @@ public class Server implements Runnable {
             outputStream.writeObject(response);
         }
         catch (Exception e){
-            System.out.println(e);
+//            System.out.println(e);
         }
     }
 
@@ -129,7 +130,7 @@ public class Server implements Runnable {
 
         }
         catch (Exception e){
-            System.out.println(e);
+//            System.out.println(e);
         }
 
     }
